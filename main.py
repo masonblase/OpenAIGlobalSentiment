@@ -11,6 +11,7 @@
 from ast import literal_eval
 from deep_translator import (GoogleTranslator)
 from newsapi import NewsApiClient
+import numpy as np
 import pandas as pd
 import requests
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
@@ -52,9 +53,18 @@ sentiment_score = pipeline(
         use_fast = False
     )
 )
+
 clean_texts = df["translated_content"].dropna().astype(str).tolist()
-df["sentiment_score"] = sentiment_score(clean_texts, batch_size = 32)
-df = df.join(
-    pd.json_normalize(df["sentiment_score"].map(safe_parse))
-).drop("sentiment_score", axis = 1)
-print(df)
+df["sentiment_placeholder"] = sentiment_score(clean_texts, batch_size = 32)
+df = df.join( # Normalize sentiment data
+    pd.json_normalize(df["sentiment_placeholder"].map(safe_parse))
+).drop("sentiment_placeholder", axis = 1)
+
+conditions = [
+    (df["label"] == "negative"),
+    (df["label"] == "neutral"),
+    (df["label"] == "positive")
+]
+values = [-1, 0, 1]
+df["sentiment_score"] = np.select(conditions, values)
+print(df["sentiment_score"])

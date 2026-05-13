@@ -34,11 +34,13 @@ def translate_column(df, column, target_lang = "en", source_lang = "auto"):
 
 # Extract data from NewsAPI
 newsapi = NewsApiClient(api_key = NEWSAPI_KEY"")
-all_articles = newsapi.get_everything(q = "OpenAI")
+all_articles = newsapi.get_everything(q = "OpenAI", language = "fr", sort_by = "relevancy")
 
 # Normalize data and clean data
 df = pd.json_normalize(all_articles["articles"])
 df = df.drop("urlToImage", axis = 1)
+df = df.drop("source.id", axis = 1)
+df = df.drop("source.name", axis = 1)
 
 # Translate content and store in a column
 df["content"] = df["content"].str[:5000]
@@ -67,4 +69,4 @@ conditions = [
 ]
 values = [-1, 0, 1]
 df["sentiment_score"] = np.select(conditions, values)
-print(df["sentiment_score"])
+df.to_csv("openaisentiment.csv", sep = "\t", encoding = "utf-8", index = False, header = True)

@@ -14,6 +14,7 @@ from ast import literal_eval
 import customtkinter as ctk
 from deep_translator import (GoogleTranslator)
 from dotenv import load_dotenv
+from huggingface_hub import login
 from newsapi import NewsApiClient
 import numpy as np
 import os
@@ -22,6 +23,7 @@ import requests
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
 load_dotenv()
+login(token = os.getenv("HF_TOKEN"))
 
 # -- HELPER FUNCTIONS --
 def safe_parse(val):

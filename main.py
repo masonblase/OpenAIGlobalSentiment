@@ -58,9 +58,9 @@ def get_newsapi_data():
     # Get sentiment and store in a column
     sentiment_score = pipeline(
         "sentiment-analysis",
-        model = "cardiffnlp/twitter-xlm-roberta-base-sentiment",
+        model = "distilbert/distilbert-base-uncased-finetuned-sst-2-english",
         tokenizer = AutoTokenizer.from_pretrained(
-            "cardiffnlp/twitter-xlm-roberta-base-sentiment",
+            "distilbert/distilbert-base-uncased-finetuned-sst-2-english",
             use_fast = False
         )
     )

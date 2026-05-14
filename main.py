@@ -24,6 +24,7 @@ def safe_parse(val):
         return literal_eval(val)
     return val
 
+# Translates "content" and puts into new column
 def translate_column(df, column, target_lang = "en", source_lang = "auto"):
     translator = GoogleTranslator(source = source_lang, target = target_lang)
     
@@ -36,7 +37,7 @@ def translate_column(df, column, target_lang = "en", source_lang = "auto"):
 # Extract and clean data from NewsAPI
 def get_newsapi_data():
     newsapi = NewsApiClient(api_key = NEWSAPI_KEY"")
-    all_articles = newsapi.get_everything(q = "OpenAI", language = "fr", sort_by = "relevancy")
+    all_articles = newsapi.get_everything(q = "OpenAI", language = input("What is your desired source language? "), sort_by = "relevancy")
 
     # Normalize and clean data
     df = pd.json_normalize(all_articles["articles"])

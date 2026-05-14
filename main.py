@@ -16,13 +16,14 @@ import pandas as pd
 import requests
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
-# -- FUNCTIONS --
+# -- HELPER FUNCTIONS --
 def safe_parse(val):
     if isinstance(val, dict):
         return val
     if isinstance(val, str):
         return literal_eval(val)
     return val
+
 def translate_column(df, column, target_lang = "en", source_lang = "auto"):
     translator = GoogleTranslator(source = source_lang, target = target_lang)
     
@@ -32,39 +33,42 @@ def translate_column(df, column, target_lang = "en", source_lang = "auto"):
     df[f"translated_{column}"] = translated
     return df
 
-# Extract data from NewsAPI
-newsapi = NewsApiClient(api_key = NEWSAPI_KEY"")
-all_articles = newsapi.get_everything(q = "OpenAI", language = "fr", sort_by = "relevancy")
+# Extract and clean data from NewsAPI
+def get_newsapi_data():
+    newsapi = NewsApiClient(api_key = NEWSAPI_KEY"")
+    all_articles = newsapi.get_everything(q = "OpenAI", language = "fr", sort_by = "relevancy")
 
-# Normalize and clean data
-df = pd.json_normalize(all_articles["articles"])
-df = df.drop(columns = ["urlToImage", "source.id", "source.name"], errors = "ignore")
+    # Normalize and clean data
+    df = pd.json_normalize(all_articles["articles"])
+    df = df.drop(columns = ["urlToImage", "source.id", "source.name"], errors = "ignore")
 
-# Translate content and store in a column
-df["content"] = df["content"].str[:5000]
-df = translate_column(df, column = "content", target_lang = "en")
+    # Translate content and store in a column
+    df["content"] = df["content"].str[:5000]
+    df = translate_column(df, column = "content", target_lang = "en")
 
-# Get sentiment and store in a column
-sentiment_score = pipeline(
-    "sentiment-analysis",
-    model = "cardiffnlp/twitter-xlm-roberta-base-sentiment",
-    tokenizer = AutoTokenizer.from_pretrained(
-        "cardiffnlp/twitter-xlm-roberta-base-sentiment",
-        use_fast = False
+    # Get sentiment and store in a column
+    sentiment_score = pipeline(
+        "sentiment-analysis",
+        model = "cardiffnlp/twitter-xlm-roberta-base-sentiment",
+        tokenizer = AutoTokenizer.from_pretrained(
+            "cardiffnlp/twitter-xlm-roberta-base-sentiment",
+            use_fast = False
+        )
     )
-)
 
-clean_texts = df["translated_content"].dropna().astype(str).tolist()
-df["sentiment_placeholder"] = sentiment_score(clean_texts, batch_size = 32)
-df = df.join( # Normalize sentiment data
-    pd.json_normalize(df["sentiment_placeholder"].map(safe_parse))
-).drop("sentiment_placeholder", axis = 1)
+    clean_texts = df["translated_content"].dropna().astype(str).tolist()
+    df["sentiment_placeholder"] = sentiment_score(clean_texts, batch_size = 32)
+    df = df.join( # Normalize sentiment data
+        pd.json_normalize(df["sentiment_placeholder"].map(safe_parse))
+    ).drop("sentiment_placeholder", axis = 1)
 
-conditions = [
-    (df["label"] == "negative"),
-    (df["label"] == "neutral"),
-    (df["label"] == "positive")
-]
-values = [-1, 0, 1]
-df["sentiment_score"] = np.select(conditions, values)
-df.to_csv("openaisentiment.csv", sep = "\t", encoding = "utf-8", index = False, header = True)
+    conditions = [
+        (df["label"] == "negative"),
+        (df["label"] == "neutral"),
+        (df["label"] == "positive")
+    ]
+    values = [-1, 0, 1]
+    df["sentiment_score"] = np.select(conditions, values)
+    df.to_csv("openaisentiment.csv", sep = "\t", encoding = "utf-8", index = False, header = True)
+
+get_newsapi_data()

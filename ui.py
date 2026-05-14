@@ -4,6 +4,7 @@
 # pip install newsapi-python
 # pip install pandas
 # pip install protobuf sentencepiece
+# pip install python-dotenv
 # pip install requests
 # pip install sentencepiece
 # pip install torch
@@ -12,11 +13,15 @@
 from ast import literal_eval
 import customtkinter as ctk
 from deep_translator import (GoogleTranslator)
+from dotenv import load_dotenv
 from newsapi import NewsApiClient
 import numpy as np
+import os
 import pandas as pd
 import requests
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+
+load_dotenv()
 
 # -- HELPER FUNCTIONS --
 def safe_parse(val):
@@ -38,7 +43,7 @@ def translate_column(df, column, target_lang = "en", source_lang = "auto"):
 
 # Extract and clean data from NewsAPI
 def get_newsapi_data():
-    newsapi = NewsApiClient(api_key = NEWSAPI_KEY"")
+    newsapi = NewsApiClient(api_key = os.getenv("NEWSAPI_KEY"))
     language_select = languages[language_combobox.get()]
     all_articles = newsapi.get_everything(q = "OpenAI", language = language_select, sort_by = "relevancy")
 

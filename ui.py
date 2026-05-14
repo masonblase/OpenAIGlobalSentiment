@@ -39,7 +39,7 @@ def translate_column(df, column, target_lang = "en", source_lang = "auto"):
 # Extract and clean data from NewsAPI
 def get_newsapi_data():
     newsapi = NewsApiClient(api_key = NEWSAPI_KEY"")
-    language_select = language_combobox.get()
+    language_select = languages[language_combobox.get()]
     all_articles = newsapi.get_everything(q = "OpenAI", language = language_select, sort_by = "relevancy")
 
     # Normalize and clean data
@@ -81,8 +81,21 @@ app.title("OpenAI Global Sentiment")
 app.geometry("400x150")
 app.grid_columnconfigure(0, weight = 1)
 
-languages = ["ar", "de", "en", "fr", "he", "it", "nl", "no", "pt", "ru", "sv", "zh"]
-language_combobox = ctk.CTkComboBox(app, values = languages)
+languages = {
+    "Arabic": "ar",
+    "German": "de",
+    "English": "en",
+    "French": "fr",
+    "Hebrew": "he",
+    "Italian": "it",
+    "Dutch": "nl",
+    "Norwegian": "no",
+    "Portuguese": "pt",
+    "Russian": "ru",
+    "Swedish": "sv",
+    "Chinese": "zh",
+}
+language_combobox = ctk.CTkComboBox(app, values = list(languages.keys()))
 language_combobox.grid(row = 0, column = 1, padx = 20, pady = 20, sticky = "w")
 
 button = ctk.CTkButton(app, text = "Write csv", command = get_newsapi_data)

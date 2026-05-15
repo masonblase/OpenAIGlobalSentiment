@@ -20,6 +20,7 @@ import numpy as np
 import os
 import pandas as pd
 from transformers import AutoTokenizer, pipeline
+from ui import openaiglobalsentiment_ui
 
 load_dotenv()
 login(token = os.getenv("HF_TOKEN"))
@@ -43,7 +44,7 @@ def translate_column(df, column, target_lang = "en", source_lang = "auto"):
     return df
 
 # Extract and clean data from NewsAPI
-def get_newsapi_data():
+def get_newsapi_data(languages, language_combobox):
     newsapi = NewsApiClient(api_key = os.getenv("NEWSAPI_KEY"))
     language_select = languages[language_combobox.get()]
     language_name = language_combobox.get()
@@ -73,6 +74,7 @@ def get_newsapi_data():
         pd.json_normalize(df["sentiment_placeholder"].map(safe_parse))
     ).drop("sentiment_placeholder", axis = 1)
 
+    # Assign numerical value to sentiment label
     conditions = [
         (df["label"] == "negative"),
         (df["label"] == "neutral"),
@@ -80,32 +82,11 @@ def get_newsapi_data():
     ]
     values = [-1, 0, 1]
     df["sentiment_score"] = np.select(conditions, values)
-    df.to_csv(f"{language_name.lower()}openaisentiment.csv", sep = "\t", encoding = "utf-8", index = False, header = True)
+
+    # Write data frame to csv
+    df.to_csv(f"{language_name.lower()}_openaisentiment.csv", sep = "\t", encoding = "utf-8", index = False, header = True)
 
 # -- UI --
 app = ctk.CTk()
-app.title("OpenAI Global Sentiment")
-app.geometry("400x150")
-app.grid_columnconfigure(0, weight = 1)
-
-languages = {
-    "Arabic": "ar",
-    "German": "de",
-    "English": "en",
-    "French": "fr",
-    "Hebrew": "he",
-    "Italian": "it",
-    "Dutch": "nl",
-    "Norwegian": "no",
-    "Portuguese": "pt",
-    "Russian": "ru",
-    "Swedish": "sv",
-    "Chinese": "zh",
-}
-language_combobox = ctk.CTkComboBox(app, values = list(languages.keys()))
-language_combobox.grid(row = 0, column = 1, padx = 20, pady = 20, sticky = "w")
-
-button = ctk.CTkButton(app, text = "Write csv", command = get_newsapi_data)
-button.grid(row = 0, column = 0, padx = 20, pady = 20, sticky = "ew")
-
+openaiglobalsentiment_ui(app, get_newsapi_data)
 app.mainloop()

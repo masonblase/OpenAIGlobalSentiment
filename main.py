@@ -19,8 +19,7 @@ from newsapi import NewsApiClient
 import numpy as np
 import os
 import pandas as pd
-import requests
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+from transformers import AutoTokenizer, pipeline
 
 load_dotenv()
 login(token = os.getenv("HF_TOKEN"))

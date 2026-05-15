@@ -47,6 +47,7 @@ def translate_column(df, column, target_lang = "en", source_lang = "auto"):
 def get_newsapi_data():
     newsapi = NewsApiClient(api_key = os.getenv("NEWSAPI_KEY"))
     language_select = languages[language_combobox.get()]
+    language_name = language_combobox.get()
     all_articles = newsapi.get_everything(q = "OpenAI", language = language_select, sort_by = "relevancy")
 
     # Normalize and clean data
@@ -80,7 +81,7 @@ def get_newsapi_data():
     ]
     values = [-1, 0, 1]
     df["sentiment_score"] = np.select(conditions, values)
-    df.to_csv("openaisentiment.csv", sep = "\t", encoding = "utf-8", index = False, header = True)
+    df.to_csv(f"{language_name.lower()}openaisentiment.csv", sep = "\t", encoding = "utf-8", index = False, header = True)
 
 # -- UI --
 app = ctk.CTk()
